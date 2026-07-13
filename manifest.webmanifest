@@ -1,0 +1,37 @@
+{
+  "name": "Laagjes Methode — HUB Ruinerwold",
+  "short_name": "Laagjes",
+  "description": "Interactieve laadinstructie voor de Laagjes Methode.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#eef2e8",
+  "theme_color": "#35670F",
+  "lang": "nl",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    },
+    {
+      "src": "icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "maskable"
+    }
+  ]
+}
