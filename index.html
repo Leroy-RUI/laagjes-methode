@@ -229,7 +229,7 @@
   <section class="card ergo" id="ergo">
     <p class="eyebrow">Formaten · L &amp; M</p>
     <h2 class="ergo-title">Linker stapel altijd het hoogst</h2>
-    <p class="ergo-sub">Gele én blauwe boxen komen in twee maten — <b>L</b> en <b>M</b> — met <b>alleen</b> een hoogteverschil (L ≈ 1,2× M), verder identiek. De linker stapel <b>39 · 33 · 30</b> moet daardoor <b>altijd hoger</b> blijven dan <b>32 · 31 · 29 · 28</b>. Zo niet, dan til je boxen <b>over</b> boxen — zwaar voor de rug. Zet dus de hoge <b>L</b> links.</p>
+    <p class="ergo-sub">Gele én blauwe boxen komen in twee maten — <b>L</b> en <b>M</b> — met <b>alleen</b> een hoogteverschil (L ≈ 1,2× M), verder identiek. De linker stapel <b>39 · 33 · 30</b> moet daardoor <b>altijd hoger</b> blijven dan de buren <b>32 en 31</b>. Zo niet, dan til je <b>box 30 over 32 en 31</b> — zwaar voor de rug. Zet dus de hoge <b>L</b> links.</p>
     <div class="ergo-toggle" role="tablist" aria-label="Fout of goed">
       <button class="ergo-btn bad" id="ergoFout" role="tab" type="button">⚠ Fout</button>
       <button class="ergo-btn good" id="ergoGoed" role="tab" type="button">✓ Goed</button>
@@ -596,7 +596,7 @@
     var W=1.0, D=1.15, S=1.6;                   // footprint + kolom-offset
     // 3 kolommen op (c*S, -c*S): x+y=0 -> gelijke vloerlijn, eerlijke hoogte-vergelijking
     var COLS=[{c:0,lab:[39,33,30]},{c:1,lab:[38,32,29]},{c:2,lab:[37,31,28]}];
-    var HOT={28:1,29:1,31:1,32:1};             // buren die boven de linker stapel uit steken
+    var HOT={31:1,32:1};                       // buren (mid-boxen) waar box 30 overheen zou moeten
 
     function heights(mode){
       return COLS.map(function(col){
@@ -665,8 +665,8 @@
       bGoed.classList.toggle('is-on',mode==='goed');
       eVerdict.className='ergo-verdict '+(mode==='fout'?'bad':'good');
       eVerdict.innerHTML=(mode==='fout')
-        ? '<b>Zo NIET.</b> De linker stapel <b>39·33·30</b> is <b>lager</b> dan <b>32·31·29·28</b> — je moet boxen <b>over</b> de hogere buren tillen. Zwaar voor rug en schouders.'
-        : '<b>Zo WEL.</b> Zet de hoge <b>L-boxen</b> in de linker stapel <b>39·33·30</b>, zodat die <b>hoger</b> blijft dan <b>32·31·29·28</b>. De trap loopt netjes af naar de deur — nooit over een box tillen.';
+        ? '<b>Zo NIET.</b> De linker stapel <b>39·33·30</b> is te laag — je moet <b>box 30 over de buren 32 en 31</b> tillen. Zwaar voor rug en schouders.'
+        : '<b>Zo WEL.</b> Zet de hoge <b>L-boxen</b> in de linker stapel <b>39·33·30</b>, dan hoef je <b>box 30 niet over 32 en box 31</b> te tillen. De trap loopt netjes af naar de deur.';
     }
     bFout.onclick=function(){ draw('fout'); };
     bGoed.onclick=function(){ draw('goed'); };
