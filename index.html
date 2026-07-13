@@ -229,7 +229,7 @@
   <section class="card ergo" id="ergo">
     <p class="eyebrow">Formaten · L &amp; M</p>
     <h2 class="ergo-title">Linker stapel altijd het hoogst</h2>
-    <p class="ergo-sub">Gele én blauwe boxen komen in twee maten — <b>L</b> en <b>M</b> — met <b>alleen</b> een hoogteverschil (L ≈ 1,2× M), verder identiek. De linker stapel <b>39 · 33 · 30</b> moet daardoor <b>altijd hoger</b> blijven dan de buren <b>32 en 31</b>. Zo niet, dan til je <b>box 30 over 32 en 31</b> — zwaar voor de rug. Zet dus de hoge <b>L</b> links.</p>
+    <p class="ergo-sub">Gele én blauwe boxen komen in twee maten — <b>L</b> en <b>M</b> — met <b>alleen</b> een hoogteverschil (L ≈ 1,2× M), verder identiek. De linker stapel <b>39 · 33 · 30</b> moet daardoor <b>altijd hoger</b> blijven dan de boxen <b>32 en 31</b>. Zo niet, dan til je <b>box 30 over de boxen 32 en 31</b> — zwaar voor de rug. Zet dus de hoge <b>L</b> links.</p>
     <div class="ergo-toggle" role="tablist" aria-label="Fout of goed">
       <button class="ergo-btn bad" id="ergoFout" role="tab" type="button">⚠ Fout</button>
       <button class="ergo-btn good" id="ergoGoed" role="tab" type="button">✓ Goed</button>
@@ -585,36 +585,39 @@
 
   // ================= Formaten L & M — fout vs goed (ergonomie) =================
   // Aparte leer-inset: de VOORSTE rij van Zone 1 als 3 kolommen op één vloerlijn.
-  // Linker stapel = 39·33·30. Buren = 38·32·29 (midden) en 37·31·28 (rechts).
-  // GOED: links = hoge L-boxen -> hoogste. FOUT: buren = L -> steken boven links uit.
+  // Laatste rij aan de schuifdeur. Linker stapel = 39·33·30 (box 30 = top).
+  // GOED: 39·33·30 hoogst -> 32·31 trap af naar de deur. FOUT: 32·31 steken boven box 30 uit.
   (function(){
     var eStage=document.getElementById('ergoStage');
     if(!eStage) return;
     var eVerdict=document.getElementById('ergoVerdict');
     var bFout=document.getElementById('ergoFout'), bGoed=document.getElementById('ergoGoed');
-    var Mh=0.82, Lh=0.984, GZ=0.06;            // M en L (L = 1,2× M), verticale voeg
+    var Mh=0.62, Lh=1.05, Gh=0.9, GZ=0.06;            // M en L (L = 1,2× M), verticale voeg
     var W=1.0, D=1.15, S=1.6;                   // footprint + kolom-offset
     // 3 kolommen op (c*S, -c*S): x+y=0 -> gelijke vloerlijn, eerlijke hoogte-vergelijking
-    var COLS=[{c:0,lab:[39,33,30]},{c:1,lab:[38,32,29]},{c:2,lab:[37,31,28]}];
+    // Per stand: kolommen met hun boxen (onder->boven). Linker stapel = 39·33·30, box 30 = top.
+    function layout(mode){
+      return (mode==='fout')
+        ? [ {c:0,h:Mh,boxes:[39,33,30]},
+            {c:1,h:Lh,boxes:[38,32]},
+            {c:2,h:Lh,boxes:[37,31]} ]
+        : [ {c:0,h:Gh,boxes:[39,33,30]},
+            {c:1,h:Gh,boxes:[38,32]},
+            {c:2,h:Gh,boxes:[37]} ];
+    }
+    function colTopZ(col){ return col.boxes.length*col.h + (col.boxes.length-1)*GZ; }
     var HOT={31:1,32:1};                       // buren (mid-boxen) waar box 30 overheen zou moeten
 
-    function heights(mode){
-      return COLS.map(function(col){
-        var left=(col.c===0);
-        var big=(mode==='goed')?left:!left;    // goed: links hoog; fout: buren hoog
-        var h=big?Lh:Mh; return [h,h,h];
-      });
-    }
     // vaste viewBox die BEIDE standen omvat (geen sprong bij omschakelen)
     var minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;
     function acc(p){ if(p[0]<minX)minX=p[0]; if(p[0]>maxX)maxX=p[0]; if(p[1]<minY)minY=p[1]; if(p[1]>maxY)maxY=p[1]; }
     ['fout','goed'].forEach(function(m){
-      heights(m).forEach(function(hs,ci){
-        var x0=COLS[ci].c*S, y0=-COLS[ci].c*S, z=0;
-        hs.forEach(function(h){
+      layout(m).forEach(function(col){
+        var x0=col.c*S, y0=-col.c*S, z=0;
+        col.boxes.forEach(function(){
           [P(x0,y0,z),P(x0+W,y0,z),P(x0+W,y0+D,z),P(x0,y0+D,z),
-           P(x0,y0,z+h),P(x0+W,y0,z+h),P(x0+W,y0+D,z+h),P(x0,y0+D,z+h)].forEach(acc);
-          z+=h+GZ;
+           P(x0,y0,z+col.h),P(x0+W,y0,z+col.h),P(x0+W,y0+D,z+col.h),P(x0,y0+D,z+col.h)].forEach(acc);
+          z+=col.h+GZ;
         });
       });
     });
@@ -635,25 +638,25 @@
     }
     function draw(mode){
       while(eStage.firstChild) eStage.removeChild(eStage.firstChild);
-      var hs=heights(mode);
-      var leftTopZ=hs[0][0]+hs[0][1]+hs[0][2]+2*GZ;
-      COLS.forEach(function(col,ci){
+      var L=layout(mode);
+      var leftTopZ=colTopZ(L[0]);
+      L.forEach(function(col){
         var x0=col.c*S, y0=-col.c*S, z=0;
-        hs[ci].forEach(function(h,lz){
-          var lab=col.lab[lz], cls='';
+        col.boxes.forEach(function(lab){
+          var cls='';
           if(mode==='goed' && col.c===0) cls='tall';
           else if(mode==='fout' && HOT[lab]) cls='hot';
-          mkBox(x0,y0,z,h,lab,cls); z+=h+GZ;
+          mkBox(x0,y0,z,col.h,lab,cls); z+=col.h+GZ;
         });
       });
       // referentielijn (screen-horizontaal) op de top van de linker stapel
       var yRef=P(0,0,leftTopZ)[1];
       eStage.appendChild(el('line',{'class':'refline',x1:(minX-4).toFixed(1),y1:yRef.toFixed(1),x2:(maxX+4).toFixed(1),y2:yRef.toFixed(1)}));
       if(mode==='fout'){
-        var startX=P(2*S+W/2,-2*S+D/2,0)[0];
-        var pEnd=P(W/2,D/2,leftTopZ);
-        var ex=pEnd[0], ey=pEnd[1]-3, ctrlX=(startX+ex)/2, ctrlY=minY-30;
-        eStage.appendChild(el('path',{'class':'liftarc',d:'M '+startX.toFixed(1)+' '+(minY-4).toFixed(1)+' Q '+ctrlX.toFixed(1)+' '+ctrlY.toFixed(1)+' '+ex.toFixed(1)+' '+ey.toFixed(1)}));
+        var s=P(W/2,D/2,leftTopZ);                 // box 30 (links, laag)
+        var e=P(2*S+W/2,-2*S+D/2,colTopZ(L[2]));   // box 31 (rechts, hoog)
+        var ctrlX=(s[0]+e[0])/2, ctrlY=minY-30;
+        eStage.appendChild(el('path',{'class':'liftarc',d:'M '+s[0].toFixed(1)+' '+(s[1]-4).toFixed(1)+' Q '+ctrlX.toFixed(1)+' '+ctrlY.toFixed(1)+' '+e[0].toFixed(1)+' '+(e[1]-4).toFixed(1)}));
         var w1=el('text',{'class':'ergo-mark bad',x:ctrlX.toFixed(1),y:(ctrlY-5).toFixed(1),'text-anchor':'middle'}); w1.textContent='⚠ over tillen';
         eStage.appendChild(w1);
       } else {
@@ -665,8 +668,8 @@
       bGoed.classList.toggle('is-on',mode==='goed');
       eVerdict.className='ergo-verdict '+(mode==='fout'?'bad':'good');
       eVerdict.innerHTML=(mode==='fout')
-        ? '<b>Zo NIET.</b> De linker stapel <b>39·33·30</b> is te laag — je moet <b>box 30 over de buren 32 en 31</b> tillen. Zwaar voor rug en schouders.'
-        : '<b>Zo WEL.</b> Zet de hoge <b>L-boxen</b> in de linker stapel <b>39·33·30</b>, dan hoef je <b>box 30 niet over 32 en box 31</b> te tillen. De trap loopt netjes af naar de deur.';
+        ? '<b>Zo NIET.</b> De linker stapel <b>39·33·30</b> is te laag — je moet <b>box 30 over de boxen 32 en 31</b> tillen. Zwaar voor rug en schouders.'
+        : '<b>Zo WEL.</b> Zet de hoge <b>L-boxen</b> in de linker stapel <b>39·33·30</b>, dan hoef je <b>box 30 niet over de boxen 32 en 31</b> te tillen. De trap loopt netjes af naar de deur.';
     }
     bFout.onclick=function(){ draw('fout'); };
     bGoed.onclick=function(){ draw('goed'); };
