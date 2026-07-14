@@ -139,9 +139,6 @@
   .ergo-btn.bad.is-on{ background:#c8442e; color:#fff; }
   .ergo-btn:focus-visible{ outline:3px solid var(--green-bright); outline-offset:2px; }
   .ergo-stage{ width:100%; max-width:540px; display:block; margin:10px auto 2px; }
-  .ergo-verdict{ margin-top:6px; padding:12px 15px; border-radius:10px; font-size:14px; line-height:1.45; }
-  .ergo-verdict.bad{ background:color-mix(in srgb,#c8442e 11%, var(--surface)); border:1px solid color-mix(in srgb,#c8442e 38%, transparent); border-left:4px solid #c8442e; }
-  .ergo-verdict.good{ background:var(--surface2); border:1px solid var(--line); border-left:4px solid var(--green); }
   .mini .f{ stroke:var(--box-edge); stroke-width:1; stroke-linejoin:round; }
   .mini .top{ fill:var(--box-top); } .mini .left{ fill:var(--box-left); } .mini .right{ fill:var(--box-right); }
   .mini .lbl{ fill:var(--box-edge); font-family:var(--mono); font-weight:700; font-size:9px; }
@@ -235,7 +232,6 @@
       <button class="ergo-btn good" id="ergoGoed" role="tab" type="button">✓ Goed</button>
     </div>
     <svg class="ergo-stage" id="ergoStage" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Vergelijking: linker stapel te laag (fout) versus het hoogst (goed)"></svg>
-    <div class="ergo-verdict" id="ergoVerdict"></div>
   </section>
 </div>
 
@@ -590,7 +586,6 @@
   (function(){
     var eStage=document.getElementById('ergoStage');
     if(!eStage) return;
-    var eVerdict=document.getElementById('ergoVerdict');
     var bFout=document.getElementById('ergoFout'), bGoed=document.getElementById('ergoGoed');
     var Mh=0.62, Lh=1.05, Gh=0.9, GZ=0.06;            // M en L (L = 1,2× M), verticale voeg
     var W=1.0, D=1.15, S=1.6;                   // footprint + kolom-offset
@@ -666,10 +661,6 @@
       }
       bFout.classList.toggle('is-on',mode==='fout');
       bGoed.classList.toggle('is-on',mode==='goed');
-      eVerdict.className='ergo-verdict '+(mode==='fout'?'bad':'good');
-      eVerdict.innerHTML=(mode==='fout')
-        ? '<b>Zo NIET.</b> De linker stapel <b>39·33·30</b> is te laag — je moet <b>box 30 over de boxen 32 en 31</b> tillen. Zwaar voor rug en schouders.'
-        : '<b>Zo WEL.</b> Zet de hoge <b>L-boxen</b> in de linker stapel <b>39·33·30</b>, dan hoef je <b>box 30 niet over de boxen 32 en 31</b> te tillen. De trap loopt netjes af naar de deur.';
     }
     bFout.onclick=function(){ draw('fout'); };
     bGoed.onclick=function(){ draw('goed'); };
