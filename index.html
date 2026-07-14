@@ -97,6 +97,12 @@
   .floor{ fill:color-mix(in srgb, var(--muted) 12%, transparent); stroke:color-mix(in srgb,var(--muted) 26%, transparent); stroke-width:1; }
   .floor2{ fill:color-mix(in srgb, var(--cool) 12%, transparent); stroke:color-mix(in srgb,var(--cool) 28%, transparent); stroke-width:1; }
   .divider{ stroke:var(--green); stroke-width:1.6; stroke-dasharray:5 4; opacity:.7; }
+  /* DO NOT STACK-tape: groene band die de bovenkant van de lading volgt, bij volle lading */
+  .dns{ opacity:0; transition:opacity .4s; pointer-events:none; }
+  #stage.load-done .dns{ opacity:1; }
+  .dns-edge{ fill:none; stroke:#5f8a12; stroke-width:12; stroke-linejoin:round; stroke-linecap:round; }
+  .dns-band{ fill:none; stroke:#8CC220; stroke-width:10; stroke-linejoin:round; stroke-linecap:round; }
+  .dns-text{ fill:#111; font-family:var(--sans); font-weight:800; font-size:7px; letter-spacing:.2px; }
 
   .controls{ display:flex; align-items:center; gap:9px; margin-top:14px; flex-wrap:wrap; }
   button.ctl{ font-family:var(--sans); font-size:14px; font-weight:700; cursor:pointer; border:1px solid var(--line); background:var(--surface); color:var(--ink); border-radius:9px; padding:9px 14px; display:inline-flex; gap:6px; align-items:center; transition:.15s; }
@@ -470,6 +476,37 @@
   crateBoxes.forEach(function(s,i){ svg.appendChild(paintSmall(s,'spose-crate',sLabel(i))); });
   fillBoxes.forEach(function(s,i){ svg.appendChild(paintSmall(s,'spose-set',sLabel(i))); });
 
+  // ---- DO NOT STACK-tape: groene band (namaak wandtape) die de BOVENKANT van de
+  // lading volgt, van box 25 (zijkant) via de diepteovergang naar box 3 (achterkant).
+  // Ligt net boven de toprand -> niks steekt erboven. Tekst op het lange zijkant-front
+  // segment (box 34 -> box 25). Verschijnt pas bij volle lading (#stage.load-done).
+  (function(){
+    var TOPZ1 = 2*(BZ+G) + BZ;   // top zijkant (3 hoog)
+    var TOPZ2 = 3*(BZ+G) + BZ;   // top achterkant (4 hoog)
+    var LIFT  = 4;               // net boven de toprand
+    var R = [
+      P(Z1_XMAX, 0,           TOPZ1),  // R1 box 25 — buitenhoek zijkant
+      P(0,       0,           TOPZ1),  // R2 top zijkant (box 34)
+      P(0,       Z1_YSPAN,    TOPZ1),  // R3 achterrand zijkant = dal bij de overgang
+      P(0,       Z2_Y0,       TOPZ2),  // R4 top achterkant (box 15) — trapje omhoog
+      P(0,       Z2_Y0+(BY+G),TOPZ2)   // R5 box 3
+    ].map(function(p){ return [p[0], p[1]-LIFT]; });
+    var d = pts(R);
+    var g=document.createElementNS(SVGNS,'g'); g.setAttribute('class','dns');
+    var edge=document.createElementNS(SVGNS,'polyline'); edge.setAttribute('class','dns-edge'); edge.setAttribute('points',d); g.appendChild(edge);
+    var band=document.createElementNS(SVGNS,'polyline'); band.setAttribute('class','dns-band'); band.setAttribute('points',d); g.appendChild(band);
+    // tekst langs het lange zijkant-front segment R2 -> R1 (leest van box 34 naar box 25)
+    var a=R[1], b=R[0], midx=(a[0]+b[0])/2, midy=(a[1]+b[1])/2;
+    var ang=Math.atan2(b[1]-a[1], b[0]-a[0])*180/Math.PI;
+    var seg=Math.sqrt((b[0]-a[0])*(b[0]-a[0])+(b[1]-a[1])*(b[1]-a[1]));
+    var t=document.createElementNS(SVGNS,'text'); t.setAttribute('class','dns-text');
+    t.setAttribute('x',midx.toFixed(1)); t.setAttribute('y',(midy+2.5).toFixed(1)); t.setAttribute('text-anchor','middle');
+    t.setAttribute('transform','rotate('+ang.toFixed(1)+' '+midx.toFixed(1)+' '+midy.toFixed(1)+')');
+    t.setAttribute('textLength',(seg*0.92).toFixed(1)); t.setAttribute('lengthAdjust','spacingAndGlyphs');
+    t.textContent='DO NOT STACK ABOVE THIS LINE'; g.appendChild(t);
+    svg.appendChild(g);
+  })();
+
   // alles staat nu getekend -> herkadreer op de echte inhoud (incl. labels)
   fitView();
   if(document.fonts && document.fonts.ready){ document.fonts.ready.then(fitView); }
@@ -547,6 +584,7 @@
       if(g.classList.contains('mur1')) g.style.transform = (cur>=PUSHER_STEP) ? 'none' : FWD_TF;
     });
     svg.classList.toggle('is-filled', cur>=STEP_FILL);
+    svg.classList.toggle('load-done', cur>=N_LOAD);   // DO NOT STACK-lijn pas tonen bij volle lading
     var t=stepText(cur); dk.textContent=t[0]; dp.innerHTML=t[1];
     desc.classList.toggle('z2', t[2]===2);
     chips.innerHTML='';
