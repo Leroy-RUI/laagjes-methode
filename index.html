@@ -97,9 +97,8 @@
   .floor{ fill:color-mix(in srgb, var(--muted) 12%, transparent); stroke:color-mix(in srgb,var(--muted) 26%, transparent); stroke-width:1; }
   .floor2{ fill:color-mix(in srgb, var(--cool) 12%, transparent); stroke:color-mix(in srgb,var(--cool) 28%, transparent); stroke-width:1; }
   .divider{ stroke:var(--green); stroke-width:1.6; stroke-dasharray:5 4; opacity:.7; }
-  /* DO NOT STACK-tape: groene band die de bovenkant van de lading volgt, bij volle lading */
-  .dns{ opacity:0; transition:opacity .4s; pointer-events:none; }
-  #stage.load-done .dns{ opacity:1; }
+  /* DO NOT STACK-tape: groene band die de bovenkant van de lading volgt (altijd zichtbaar = doelhoogte) */
+  .dns{ pointer-events:none; }
   .dns-edge{ fill:none; stroke:#5f8a12; stroke-width:12; stroke-linejoin:round; stroke-linecap:round; }
   .dns-band{ fill:none; stroke:#8CC220; stroke-width:10; stroke-linejoin:round; stroke-linecap:round; }
   .dns-text{ fill:#111; font-family:var(--sans); font-weight:800; font-size:7px; letter-spacing:.2px; }
@@ -584,7 +583,6 @@
       if(g.classList.contains('mur1')) g.style.transform = (cur>=PUSHER_STEP) ? 'none' : FWD_TF;
     });
     svg.classList.toggle('is-filled', cur>=STEP_FILL);
-    svg.classList.toggle('load-done', cur>=N_LOAD);   // DO NOT STACK-lijn pas tonen bij volle lading
     var t=stepText(cur); dk.textContent=t[0]; dp.innerHTML=t[1];
     desc.classList.toggle('z2', t[2]===2);
     chips.innerHTML='';
