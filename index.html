@@ -102,6 +102,13 @@
   .dns-edge{ fill:none; stroke:#5f8a12; stroke-width:12; stroke-linejoin:round; stroke-linecap:round; }
   .dns-band{ fill:none; stroke:#8CC220; stroke-width:10; stroke-linejoin:round; stroke-linecap:round; }
   .dns-text{ fill:#111; font-family:var(--sans); font-weight:800; font-size:7px; letter-spacing:.2px; }
+  /* Konvekta koelunit: vast element hoog tegen de wand bij de zijkant (zone 1) */
+  .konv-top{ fill:#e8ebe6; stroke:#9aa595; stroke-width:1; stroke-linejoin:round; }
+  .konv-body{ fill:#f4f6f2; stroke:#9aa595; stroke-width:1; stroke-linejoin:round; }
+  .konv-grille{ fill:#c8442e; stroke:#8f2f1f; stroke-width:1; stroke-linejoin:round; }
+  .konv-louver{ stroke:#b9c2b2; stroke-width:1.2; }
+  .konv-slat{ stroke:#8f2f1f; stroke-width:.9; opacity:.8; }
+  .konv-label{ fill:#2a2f26; font-family:var(--sans); font-weight:800; font-size:6.5px; letter-spacing:.3px; }
 
   .controls{ display:flex; align-items:center; gap:9px; margin-top:14px; flex-wrap:wrap; }
   button.ctl{ font-family:var(--sans); font-size:14px; font-weight:700; cursor:pointer; border:1px solid var(--line); background:var(--surface); color:var(--ink); border-radius:9px; padding:9px 14px; display:inline-flex; gap:6px; align-items:center; transition:.15s; }
@@ -478,7 +485,7 @@
   // ---- DO NOT STACK-tape: groene band (namaak wandtape) die de BOVENKANT van de
   // lading volgt, van box 25 (zijkant) via de diepteovergang naar box 3 (achterkant).
   // Ligt net boven de toprand -> niks steekt erboven. Tekst op het lange zijkant-front
-  // segment (box 34 -> box 25). Verschijnt pas bij volle lading (#stage.load-done).
+  // segment (box 34 -> box 25). Altijd zichtbaar = doelhoogte "tot hier laden".
   (function(){
     var TOPZ1 = 2*(BZ+G) + BZ;   // top zijkant (3 hoog)
     var TOPZ2 = 3*(BZ+G) + BZ;   // top achterkant (4 hoog)
@@ -503,6 +510,34 @@
     t.setAttribute('transform','rotate('+ang.toFixed(1)+' '+midx.toFixed(1)+' '+midy.toFixed(1)+')');
     t.setAttribute('textLength',(seg*0.92).toFixed(1)); t.setAttribute('lengthAdjust','spacingAndGlyphs');
     t.textContent='DO NOT STACK ABOVE THIS LINE'; g.appendChild(t);
+    svg.appendChild(g);
+  })();
+
+  // ---- Konvekta koelunit: vast element hoog tegen de wand bij de zijkant (zone 1),
+  // boven de gele boxen. Wit met ventilatielamellen + rood rooster (namaak van de echte
+  // unit in de bus). Altijd zichtbaar; puur referentie (rooster/circulatie vrijhouden).
+  (function(){
+    var KX0=0.4, KX1=2.8, KY0=-0.55, KY1=0.0, KZ0=2.75, KZ1=3.7;  // hoog tegen de voorwand
+    var g=document.createElementNS(SVGNS,'g'); g.setAttribute('class','konv');
+    function face(cls, arr){ var p=document.createElementNS(SVGNS,'polygon'); p.setAttribute('class',cls); p.setAttribute('points',pts(arr)); g.appendChild(p); }
+    function seg(cls, A, B){ var l=document.createElementNS(SVGNS,'line'); l.setAttribute('class',cls);
+      l.setAttribute('x1',A[0].toFixed(1)); l.setAttribute('y1',A[1].toFixed(1)); l.setAttribute('x2',B[0].toFixed(1)); l.setAttribute('y2',B[1].toFixed(1)); g.appendChild(l); }
+    // rood rooster (+x kopse kant) + verticale roosterspijlen
+    face('konv-grille',[P(KX1,KY0,KZ1),P(KX1,KY1,KZ1),P(KX1,KY1,KZ0),P(KX1,KY0,KZ0)]);
+    for(var i=1;i<=3;i++){ var y=KY0+(KY1-KY0)*i/4; seg('konv-slat',P(KX1,y,KZ1),P(KX1,y,KZ0)); }
+    // witte front (+y, kijkt naar de lading) + horizontale lamellen
+    face('konv-body',[P(KX0,KY1,KZ1),P(KX1,KY1,KZ1),P(KX1,KY1,KZ0),P(KX0,KY1,KZ0)]);
+    for(var j=1;j<=4;j++){ var z=KZ0+(KZ1-KZ0)*j/5; seg('konv-louver',P(KX0,KY1,z),P(KX1,KY1,z)); }
+    // top
+    face('konv-top',[P(KX0,KY0,KZ1),P(KX1,KY0,KZ1),P(KX1,KY1,KZ1),P(KX0,KY1,KZ1)]);
+    // label 'konvekta' langs de front-lamellen
+    var lc=P((KX0+KX1)/2, KY1, (KZ0+KZ1)/2);
+    var e0=P(KX0,KY1,(KZ0+KZ1)/2), e1=P(KX1,KY1,(KZ0+KZ1)/2);
+    var ka=Math.atan2(e1[1]-e0[1], e1[0]-e0[0])*180/Math.PI;
+    var tx=document.createElementNS(SVGNS,'text'); tx.setAttribute('class','konv-label');
+    tx.setAttribute('x',lc[0].toFixed(1)); tx.setAttribute('y',lc[1].toFixed(1)); tx.setAttribute('text-anchor','middle');
+    tx.setAttribute('transform','rotate('+ka.toFixed(1)+' '+lc[0].toFixed(1)+' '+lc[1].toFixed(1)+')');
+    tx.textContent='konvekta'; g.appendChild(tx);
     svg.appendChild(g);
   })();
 
