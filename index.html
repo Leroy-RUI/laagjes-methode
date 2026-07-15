@@ -158,6 +158,19 @@
   .ergo-mark{ font-family:var(--sans); font-weight:800; font-size:11.5px; }
   .ergo-mark.bad{ fill:#c8442e; }
   .ergo-mark.good{ fill:var(--green-deep); }
+
+  /* ---- Romp + deuren (schuifdeur zijkant + 2 achterdeuren) ---- */
+  .van-floor{ fill:none; stroke:color-mix(in srgb,var(--muted) 26%, transparent); stroke-width:1.2; }
+  .van-wall{ fill:color-mix(in srgb,var(--muted) 11%, transparent); stroke:color-mix(in srgb,var(--muted) 20%, transparent); stroke-width:1; }
+  .van-edge{ stroke:color-mix(in srgb,var(--muted) 42%, transparent); stroke-width:1.3; fill:none; stroke-linecap:round; }
+  .door .panel{ stroke-width:1.8; stroke-linejoin:round; }
+  .door .handle{ stroke-width:2.4; stroke-linecap:round; }
+  .door.rear .panel{ fill:color-mix(in srgb,var(--cool) 32%, var(--surface)); fill-opacity:.66; stroke:var(--cool); }
+  .door.rear .handle{ stroke:var(--cool); }
+  .door.slide .panel{ fill:color-mix(in srgb,var(--green) 28%, var(--surface)); fill-opacity:.72; stroke:var(--green-deep); }
+  .door.slide .handle{ stroke:var(--green-deep); }
+  .door.slide{ transition:transform .6s cubic-bezier(.4,0,.2,1); }
+  .hf-logo{ opacity:.52; }   /* HelloFresh-decal op de schuifdeur: deels transparant */
 </style>
 </head>
 <body>
@@ -369,6 +382,18 @@
   var Z2_XSPAN = COLS*BX + (COLS-1)*G;          // breedte achterkant (x)
   var Z2_YMAX  = Z2_Y0 + (Z2_WALLS-1)*(BY+G) + BY;
 
+  // ---- Romp + deuren: maten (schuifdeur zijkant + 2 achterdeuren) ----
+  var VMX=0.35;                                        // marge romp rond de lading
+  var VXa=-VMX, VXb=Math.max(Z1_XMAX,Z2_XSPAN)+VMX;    // breedte-as (x)
+  var VYa=-VMX, VYb=Z2_YMAX+VMX;                       // lengte-as (y): vóór -> achter
+  var VH=3.85;                                         // binnenhoogte romp
+  var DOOR_A=155*Math.PI/180;                          // openingshoek achterdeuren (wijd open, achterkant vrij)
+  var SLD_Y0=-0.2, SLD_Y1=Z1_YSPAN+0.15;               // y-bereik schuifdeur (zone 1)
+  var SLD_DX=VYb-SLD_Y1;                               // schuifafstand: achterrand komt gelijk met de achterhoek
+  var SLIDE_TF='translate('+(-SLD_DX*EX).toFixed(2)+'px,'+(SLD_DX*EY).toFixed(2)+'px)';
+  var Z2_FIRST_STEP=(boxes.filter(function(b){return b.zone===2;})[0]||{}).step||1e9;
+  var slideGroup=null, doorAnim=[], animRAF=null;
+
   var N_LOAD=boxes.length, STEP_FILL=N_LOAD+1, TOTAL_STEPS=STEP_FILL;
   document.getElementById('tot').textContent=TOTAL_STEPS;
   document.getElementById('slider').max=TOTAL_STEPS;
@@ -425,6 +450,14 @@
     var a=P(-0.25,yb,0), b=P(xr+0.25,yb,0);
     var l=document.createElementNS(SVGNS,'line'); l.setAttribute('class','divider');
     l.setAttribute('x1',a[0]);l.setAttribute('y1',a[1]);l.setAttribute('x2',b[0]);l.setAttribute('y2',b[1]); svg.appendChild(l);
+  })();
+
+  // ---- Romp: verre wanden + vloerrand (áchter de lading getekend) ----
+  (function(){
+    function panel(cls, quad){ var p=document.createElementNS(SVGNS,'polygon'); p.setAttribute('class',cls); p.setAttribute('points',pts(quad)); svg.appendChild(p); }
+    panel('van-floor',[P(VXa,VYa,0),P(VXb,VYa,0),P(VXb,VYb,0),P(VXa,VYb,0)]);      // vloer-omtrek
+    panel('van-wall',[P(VXa,VYa,0),P(VXa,VYb,0),P(VXa,VYb,VH),P(VXa,VYa,VH)]);     // verre zijwand (-x)
+    panel('van-wall',[P(VXa,VYa,0),P(VXb,VYa,0),P(VXb,VYa,VH),P(VXa,VYa,VH)]);     // voorwand / cabine (-y)
   })();
 
   // ---- orientatie-labels ----
@@ -508,6 +541,89 @@
     svg.appendChild(g);
   })();
 
+  // ---- Deuren: 2 achterdeuren (openslaand) + schuifdeur zijkant (schuivend) ----
+  //  · schuifdeur (groen, zone 1): schuift naar achteren open zodra zone 1 laadt, blijft open
+  //  · achterdeuren (blauw, zone 2): slaan open zodra zone 2 laadt, blijven open
+  (function(){
+    function edge(a,b){ var l=document.createElementNS(SVGNS,'line'); l.setAttribute('class','van-edge');
+      l.setAttribute('x1',a[0].toFixed(1));l.setAttribute('y1',a[1].toFixed(1));l.setAttribute('x2',b[0].toFixed(1));l.setAttribute('y2',b[1].toFixed(1)); svg.appendChild(l); }
+    // dak-omtrek (wireframe) + verticale hoekstijlen aan de kijkzijde
+    edge(P(VXa,VYa,VH),P(VXb,VYa,VH)); edge(P(VXb,VYa,VH),P(VXb,VYb,VH));
+    edge(P(VXb,VYb,VH),P(VXa,VYb,VH)); edge(P(VXa,VYb,VH),P(VXa,VYa,VH));
+    edge(P(VXb,VYa,0),P(VXb,VYa,VH)); edge(P(VXb,VYb,0),P(VXb,VYb,VH)); edge(P(VXa,VYb,0),P(VXa,VYb,VH));
+
+    // --- 2 achterdeuren (achterkant, y=VYb) ---
+    var xmid=(VXa+VXb)/2;
+    function swingDoor(hx, dir, w){
+      var g=document.createElementNS(SVGNS,'g'); g.setAttribute('class','door rear');
+      var pan=document.createElementNS(SVGNS,'polygon'); pan.setAttribute('class','panel'); g.appendChild(pan);
+      var hnd=document.createElementNS(SVGNS,'line'); hnd.setAttribute('class','handle'); g.appendChild(hnd);
+      svg.appendChild(g);
+      function repaint(th){
+        var fx=hx+dir*w*Math.cos(th), fy=VYb+w*Math.sin(th);
+        var hb=P(hx,VYb,0), fb=P(fx,fy,0), ft=P(fx,fy,VH), ht=P(hx,VYb,VH);
+        pan.setAttribute('points',pts([hb,fb,ft,ht]));
+        var gx=hx+dir*w*0.86*Math.cos(th), gy=VYb+w*0.86*Math.sin(th);
+        var a=P(gx,gy,VH*0.44), b=P(gx,gy,VH*0.6);
+        hnd.setAttribute('x1',a[0].toFixed(1));hnd.setAttribute('y1',a[1].toFixed(1));hnd.setAttribute('x2',b[0].toFixed(1));hnd.setAttribute('y2',b[1].toFixed(1));
+      }
+      var d={repaint:repaint,cur:0,tgt:0}; doorAnim.push(d); repaint(0);
+    }
+    swingDoor(VXa,+1,xmid-VXa);   // linkerdeur (scharnier links)
+    swingDoor(VXb,-1,VXb-xmid);   // rechterdeur (scharnier rechts)
+
+    // --- schuifdeur (zijkant, +x wand) ---
+    var sg=document.createElementNS(SVGNS,'g'); sg.setAttribute('class','door slide');
+    var sp=document.createElementNS(SVGNS,'polygon'); sp.setAttribute('class','panel');
+    sp.setAttribute('points',pts([P(VXb,SLD_Y0,0),P(VXb,SLD_Y1,0),P(VXb,SLD_Y1,VH),P(VXb,SLD_Y0,VH)])); sg.appendChild(sp);
+    var sh=document.createElementNS(SVGNS,'line'); sh.setAttribute('class','handle');
+    var q1=P(VXb,SLD_Y1-0.3,VH*0.44), q2=P(VXb,SLD_Y1-0.3,VH*0.6);
+    sh.setAttribute('x1',q1[0].toFixed(1));sh.setAttribute('y1',q1[1].toFixed(1));sh.setAttribute('x2',q2[0].toFixed(1));sh.setAttribute('y2',q2[1].toFixed(1)); sg.appendChild(sh);
+
+    // --- HelloFresh-logo als decal in het deurvlak (schuift mee met de deur) ---
+    (function(){
+      var LW=300, LH=120, S=0.0105;                        // logo-maat binnen het deurvlak (u,v)
+      var uC=(SLD_Y0+SLD_Y1)/2, vC=VH*0.52;                // gecentreerd op de deur
+      var a=26*S, b=-15*S, c=0, d=25*S;                    // affiene v/h deurvlak (det>0 => niet gespiegeld)
+      var ee=(VXb-uC)*26 - a*(LW/2);
+      var ff=(VXb+uC)*15 - 25*vC - b*(LW/2) - d*(LH/2);
+      function E(tag,at){ var el=document.createElementNS(SVGNS,tag); for(var k in at) el.setAttribute(k,at[k]); return el; }
+      var FONT='system-ui,Segoe UI,Arial,sans-serif';
+      var logo=E('g',{'class':'hf-logo','transform':'matrix('+a.toFixed(4)+','+b.toFixed(4)+','+c+','+d.toFixed(4)+','+ee.toFixed(2)+','+ff.toFixed(2)+')'});
+      logo.appendChild(E('rect',{x:0,y:6,width:108,height:108,rx:24,ry:24,fill:'#4F8C1B',stroke:'#ffffff','stroke-width':4}));
+      logo.appendChild(E('path',{d:'M64 24 C 34 32, 28 76, 54 100 C 58 72, 82 54, 64 24 Z',fill:'#ffffff'}));
+      logo.appendChild(E('path',{d:'M54 96 Q 54 62 61 34',fill:'none',stroke:'#4F8C1B','stroke-width':4,'stroke-linecap':'round'}));
+      var l1=E('text',{x:130,y:56,'font-size':46,'font-weight':800,fill:'#ffffff','font-family':FONT}); l1.textContent='HELLO';
+      var l2=E('text',{x:130,y:104,'font-size':46,'font-weight':800,fill:'#ffffff','font-family':FONT}); l2.textContent='FRESH';
+      logo.appendChild(l1); logo.appendChild(l2);
+      sg.appendChild(logo);
+    })();
+
+    svg.appendChild(sg); slideGroup=sg;
+
+    // onzichtbare bounds zodat fitView de OPEN deuren meerekent (geen clipping)
+    var lfx=VXa+(xmid-VXa)*Math.cos(DOOR_A), lfy=VYb+(xmid-VXa)*Math.sin(DOOR_A);
+    var rfx=VXb-(VXb-xmid)*Math.cos(DOOR_A), rfy=VYb+(VXb-xmid)*Math.sin(DOOR_A);
+    var bnd=document.createElementNS(SVGNS,'polygon');
+    bnd.setAttribute('points',pts([P(lfx,lfy,0),P(lfx,lfy,VH),P(rfx,rfy,0),P(rfx,rfy,VH),P(VXb,SLD_Y1+SLD_DX,0),P(VXb,SLD_Y1+SLD_DX,VH)]));
+    bnd.setAttribute('fill','none'); bnd.setAttribute('stroke','none'); svg.appendChild(bnd);
+  })();
+
+  // ---- deur-animatie (rAF-tween voor de openslaande achterdeuren) ----
+  function tickDoors(){
+    var alive=false;
+    for(var i=0;i<doorAnim.length;i++){ var d=doorAnim[i], diff=d.tgt-d.cur;
+      if(Math.abs(diff)>0.0008){ d.cur+=diff*0.2; d.repaint(d.cur); alive=true; }
+      else if(d.cur!==d.tgt){ d.cur=d.tgt; d.repaint(d.cur); } }
+    animRAF = alive ? requestAnimationFrame(tickDoors) : null;
+  }
+  function updateDoors(){
+    if(slideGroup) slideGroup.style.transform=(cur>=1)?SLIDE_TF:'none';
+    var tgt=(cur>=Z2_FIRST_STEP)?DOOR_A:0, changed=false;
+    for(var i=0;i<doorAnim.length;i++){ if(doorAnim[i].tgt!==tgt){ doorAnim[i].tgt=tgt; changed=true; } }
+    if(changed && !animRAF) animRAF=requestAnimationFrame(tickDoors);
+  }
+
   // alles staat nu getekend -> herkadreer op de echte inhoud (incl. labels)
   fitView();
   if(document.fonts && document.fonts.ready){ document.fonts.ready.then(fitView); }
@@ -584,6 +700,7 @@
       if(g.classList.contains('mur1')) g.style.transform = (cur>=PUSHER_STEP) ? 'none' : FWD_TF;
     });
     svg.classList.toggle('is-filled', cur>=STEP_FILL);
+    updateDoors();
     var t=stepText(cur); dk.textContent=t[0]; dp.innerHTML=t[1];
     desc.classList.toggle('z2', t[2]===2);
     chips.innerHTML='';
