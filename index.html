@@ -194,8 +194,8 @@
     <main class="card stagewrap">
       <svg class="stage" id="stage" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Isometrische opbouw van de lading, box voor box"></svg>
       <div class="legend">
-        <span><span class="sw" style="background:var(--box-left)"></span>Zone 1 · Zijkant — 3 hoog</span>
-        <span><span class="sw" style="background:var(--box2-left)"></span>Zone 2 · Achterkant — 4 hoog</span>
+        <span><span class="sw" style="background:var(--box-left)"></span>Zone 1 · Zijkant — bij de schuifdeur (3 hoog)</span>
+        <span><span class="sw" style="background:var(--box2-left)"></span>Zone 2 · Achterkant — vóór de achterdeuren (4 hoog)</span>
         <span><span class="sw" style="background:var(--sbox-left)"></span>Kleine S-boxen — kratje → afvullen</span>
       </div>
 
@@ -484,9 +484,8 @@
   })();
 
   // ---- orientatie-labels ----
-  function label(x,y,z,txt,cls,anchor){ var t=document.createElementNS(SVGNS,'text'); var p=P(x,y,z); t.setAttribute('x',p[0]); t.setAttribute('y',p[1]); t.setAttribute('class','orient '+(cls||'')); t.setAttribute('text-anchor',anchor||'middle'); t.textContent=txt; svg.appendChild(t); }
-  label(Z2_XSPAN+0.5, Z2_Y0+0.4, 0, 'Zone 2 · achterkant', 'sm', 'start');
-  label(Z1_XMAX+0.5, 0.4, 0, 'Zone 1 · zijkant', 'sm', 'start');
+  // Geen zone-tekst IN de 3D-tekening (leest slecht mee met roterende lading/deuren) —
+  // de zone-aanduiding staat los van het model in de vaste legenda onder de tekening.
 
   // ---- boxes ----
   function paintFaces(target, x,y,z, dx,dy,dz, labelText){
