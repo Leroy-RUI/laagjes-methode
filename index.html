@@ -326,11 +326,14 @@
     tripleZ1(0, h-1, h, 'backtop');
     for(lz=1; lz<h; lz++) tripleZ1(1, lz, h, lz===h-1?'fronttop':'front');
   })();
-  // + 1 stapeltje van 3 op elkaar, bij de schuifdeur (1 kolom breed), rij-positie 2
+  // + 1 stapeltje van 3 op elkaar, bij de schuifdeur (1 kolom breed), rij-positie 2.
+  // KWARTSLAG NAAR LINKS t.o.v. de rest van de zijkant: footprint omgewisseld
+  // (fw:BX langs x, fd:BY langs y) => 'normaal' georiënteerd. Tegen de buitenwand
+  // gehouden (max-x = Z1_XMAX) zodat de DO NOT STACK-tape op box 25 blijft liggen.
   (function(){
     for(var lz=0; lz<STAPEL_H; lz++)
       put({ zone:1, cx:0, dy:2, lz:lz, h:STAPEL_H, move:(lz===0?'stapelfloor':'stapel'),
-        fw:BY, fd:BX, x0:2*(BY+G), y0:0, z0:lz*(BZ+G) });
+        fw:BX, fd:BY, x0:3*BY+2*G-BX, y0:0, z0:lz*(BZ+G) });
   })();
 
   // ZONE 2 — achterkant: MUUR VOOR MUUR (geen trap).
