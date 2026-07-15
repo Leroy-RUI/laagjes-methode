@@ -523,8 +523,7 @@
   function stepText(s){
     if(s===0) return ['Startpositie · kleine boxen al verzameld',
       'Verzamel de <b>kleine S-boxen</b> (HelloFresh-S &amp; Factor-S) <b>als éérst</b> — vóór box 45 — in een <b>bundel op het groene kratje</b>. Dat kratje blijft <b>op de grond naast de zijdeur</b> staan. Klik <b>Volgende</b> of <b>Afspelen</b> — elke stap zet <b>1 box</b>, links → rechts.', 1];
-    if(s===STEP_FILL) return ['Kleine S-boxen · ná het laden LOS afvullen',
-      'Lading compleet? Verdeel de kleine boxen nu <b>los</b> (dus niet gebundeld het kratje in): in de <b>open ruimte links naast box 27</b> én <b>boven op de gele boxen 30 · 29 · 28</b>. Het kratje blijft leeg op de grond staan.', 1];
+    if(s===STEP_FILL) return ['Kleine S-boxen · ná het laden LOS afvullen', '', 1];
     var b=boxes[s-1];
     if(b.zone===1){
       // stapeltje
