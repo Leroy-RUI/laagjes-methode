@@ -1,4 +1,4 @@
-const CACHE = 'laagjes-v40';
+const CACHE = 'laagjes-v41';
 const ASSETS = ['./','./index.html','./manifest.webmanifest','./icon.svg',
   './icon-192.png','./icon-512.png','./apple-touch-icon.png','./favicon-32.png'];
 self.addEventListener('install', e => {

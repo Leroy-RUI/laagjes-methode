@@ -163,6 +163,15 @@
   .van-floor{ fill:none; stroke:color-mix(in srgb,var(--muted) 26%, transparent); stroke-width:1.2; }
   .van-wall{ fill:color-mix(in srgb,var(--muted) 11%, transparent); stroke:color-mix(in srgb,var(--muted) 20%, transparent); stroke-width:1; }
   .van-edge{ stroke:color-mix(in srgb,var(--muted) 42%, transparent); stroke-width:1.3; fill:none; stroke-linecap:round; }
+  /* witte geventileerde roostervloer (naar de echte busvloer: kunststof latten + gaatjes) */
+  .van-deck{ fill:#eceff2; stroke:#bcc5ca; stroke-width:1.1; }
+  .deck-slat{ fill:none; stroke:#b4bec5; stroke-width:.85; stroke-linecap:round; }
+  .deck-seam{ fill:none; stroke:#cbd3d8; stroke-width:.7; }
+  @media (prefers-color-scheme:dark){ :root:not([data-theme]) .van-deck{ fill:#cbd2d7; stroke:#96a0a7; }
+    :root:not([data-theme]) .deck-slat{ stroke:#8b969e; } :root:not([data-theme]) .deck-seam{ stroke:#a7b0b6; } }
+  :root[data-theme="dark"] .van-deck{ fill:#cbd2d7; stroke:#96a0a7; }
+  :root[data-theme="dark"] .deck-slat{ stroke:#8b969e; }
+  :root[data-theme="dark"] .deck-seam{ stroke:#a7b0b6; }
   .door .panel{ stroke-width:1.8; stroke-linejoin:round; }
   .door .handle{ stroke-width:2.4; stroke-linecap:round; }
   .door.rear .panel{ fill:color-mix(in srgb,var(--cool) 32%, var(--surface)); fill-opacity:.66; stroke:var(--cool); }
@@ -365,8 +374,10 @@
   // Voeg ze pas NA het laden LOS toe: (a) in de open ruimte links naast box 27 en
   // (b) boven op de gele boxen 30 · 29 · 28. Dus NIET gebundeld het kratje in.
   var SW=0.50, SD=0.50, SH=0.44, SG=0.06;        // maat kleine box + gaatje
-  // groen kratje: op de GROND, vóór de bus links (blijft hier de hele tijd staan)
-  var CR = { x:-2.05, y:6.35, z:0, w:1.78, d:1.30, h:0.22 };
+  // groen kratje: op de GROND, links naast de bus (blijft hier de hele tijd staan).
+  // Zuiver naar links geschoven (x−δ, y+δ met δ=1.8 → schermhoogte gelijk) zodat het
+  // kratje vrij links van de wijd-openslaande linker-achterdeur (155°) in beeld staat.
+  var CR = { x:-3.85, y:8.15, z:0, w:1.78, d:1.30, h:0.22 };
   // BUNDEL op het kratje = 3 × 2 = 6 kleine boxen (verzameld als eerst)
   var crateBoxes = (function(){ var a=[], ox=CR.x+0.12, oy=CR.y+0.12;
     for(var r=0;r<2;r++) for(var c=0;c<3;c++) a.push({ x:ox+c*(SW+SG), y:oy+r*(SD+SG), z:CR.h });
@@ -443,10 +454,19 @@
     var a=[ P(x0,y0,0), P(x1,y0,0), P(x1,y1,0), P(x0,y1,0) ];
     var p=document.createElementNS(SVGNS,'polygon'); p.setAttribute('class',cls); p.setAttribute('points',pts(a)); svg.appendChild(p);
   }
-  // zijkant (gedraaid): x tot Z1_XMAX, y over de volle diepte Z1_YSPAN
-  floorRect('floor',  -0.25, Z1_XMAX+0.25, -0.25, Z1_YSPAN+0.25);
-  // achterkant: breedte Z2_XSPAN, y vanaf Z2_Y0
-  floorRect('floor2', -0.25, Z2_XSPAN+0.25, Z2_Y0-0.25, Z2_YMAX+0.25);
+  // witte geventileerde roostervloer over de hele romp-footprint (naar de echte busvloer):
+  // een licht dek + opstaande latten in de lengte (constante x, langs y) + dwarsnaden.
+  (function(){
+    var x0=VXa, x1=VXb, y0=VYa, y1=VYb;
+    var deck=document.createElementNS(SVGNS,'polygon'); deck.setAttribute('class','van-deck');
+    deck.setAttribute('points',pts([ P(x0,y0,0), P(x1,y0,0), P(x1,y1,0), P(x0,y1,0) ])); svg.appendChild(deck);
+    function seg(cls,a,b){ var l=document.createElementNS(SVGNS,'line'); l.setAttribute('class',cls);
+      l.setAttribute('x1',a[0].toFixed(1)); l.setAttribute('y1',a[1].toFixed(1));
+      l.setAttribute('x2',b[0].toFixed(1)); l.setAttribute('y2',b[1].toFixed(1)); svg.appendChild(l); }
+    var SLAT=0.16, SEAM=0.28, i;
+    for(i=x0+SLAT; i<x1-1e-6; i+=SLAT) seg('deck-slat', P(i,y0,0), P(i,y1,0));  // latten in de lengte
+    for(i=y0+SEAM; i<y1-1e-6; i+=SEAM) seg('deck-seam', P(x0,i,0), P(x1,i,0));  // dwarsnaden
+  })();
   // zone-scheidslijn op de grond (tussen zijkant en achterkant)
   (function(){
     var yb=(Z1_YSPAN+Z2_Y0)/2, xr=Math.max(Z1_XMAX,Z2_XSPAN);
